@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.title}} - Minimalist Chat</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <!-- Modal Backdrop -->
+    <div class="modal-backdrop fade show"></div>
+    
+    <!-- Login/Register Modal -->
+    <div class="modal fade show" id="authModal" tabindex="-1" data-bs-backdrop="static" style="display: block;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="bi bi-chat-dots text-primary"></i>
+                        Welcome to Turnate
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-form">
+                        <h6 class="mb-3">Sign In 👋</h6>
+                        <form id="loginFormElement">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="loginUsername" placeholder="Username or Email" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="password" class="form-control" id="loginPassword" placeholder="Password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 mb-3">
+                                <i class="bi bi-box-arrow-in-right"></i> Sign In
+                            </button>
+                        </form>
+                        <p class="text-center mb-0">
+                            Don't have an account?
+                            <a href="#" id="showRegister" class="text-decoration-none">Sign up 📝</a>
+                        </p>
+                    </div>
+
+                    <!-- Register Form -->
+                    <div id="registerForm" class="auth-form d-none">
+                        <h6 class="mb-3">Create Account 🚀</h6>
+                        <form id="registerFormElement">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="registerUsername" placeholder="Username" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="email" class="form-control" id="registerEmail" placeholder="Email" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="registerDisplayName" placeholder="Display Name (optional)">
+                            </div>
+                            <div class="mb-3">
+                                <input type="password" class="form-control" id="registerPassword" placeholder="Password (min 6 chars)" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 mb-3">
+                                <i class="bi bi-person-plus"></i> Create Account
+                            </button>
+                        </form>
+                        <p class="text-center mb-0">
+                            Already have an account?
+                            <a href="#" id="showLogin" class="text-decoration-none">Sign in 🔑</a>
+                        </p>
+                    </div>
+
+                    <div id="authError" class="alert alert-danger d-none" role="alert"></div>
+                    <div id="authSuccess" class="alert alert-success d-none" role="alert"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="app" class="d-none">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="bi bi-chat-dots"></i> Turnate
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> <span id="currentUsername"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" id="profileBtn"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutBtn"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-md-3 col-lg-2 bg-white border-end px-0">
+                    <div class="sidebar">
+                        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                            <h6 class="mb-0">Channels</h6>
+                            <button class="btn btn-sm btn-outline-primary" id="createChannelBtn" title="Create Channel">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <div id="channelList" class="channel-list"></div>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-md-9 col-lg-10 px-0">
+                    <div class="d-flex flex-column h-100">
+                        <!-- Chat Header -->
+                        <div class="chat-header bg-white border-bottom p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-0" id="currentChannelName"># general</h5>
+                                    <small class="text-muted" id="currentChannelDescription">General discussion</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-secondary me-2" id="channelMembersBtn">
+                                        <i class="bi bi-people"></i> Members
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" id="joinChannelBtn" style="display: none;">
+                                        <i class="bi bi-plus-circle"></i> Join
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Messages Area -->
+                        <div class="messages-container flex-grow-1 p-3" id="messagesContainer">
+                            <div id="messagesList" class="messages-list"></div>
+                            <div id="loadingMessages" class="text-center py-3 d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading messages...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="message-input bg-white border-top p-3" id="messageInputContainer">
+                            <form id="messageForm" class="d-flex">
+                                <input type="text" class="form-control me-2" id="messageInput" 
+                                       placeholder="Type your message... 💬" maxlength="2000" required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i> Send
+                                </button>
+                            </form>
+                            <div id="replyingTo" class="reply-indicator d-none mt-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-reply"></i> Replying to <span id="replyToUser"></span>
+                                    <button class="btn btn-sm btn-link p-0 ms-2" id="cancelReply">Cancel</button>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Channel Modal -->
+    <div class="modal fade" id="createChannelModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create New Channel 🆕</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createChannelForm">
+                        <div class="mb-3">
+                            <label class="form-label">Channel Name</label>
+                            <input type="text" class="form-control" id="channelName" required>
+                            <div class="form-text">Use lowercase letters, numbers, and hyphens</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="channelDescription" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Channel Type</label>
+                            <select class="form-select" id="channelType">
+                                <option value="public">🌍 Public - Anyone can join</option>
+                                <option value="private">🔒 Private - Invite only</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmCreateChannel">
+                        <i class="bi bi-plus-lg"></i> Create Channel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/channels.js"></script>
+    <script src="/static/js/messages.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>
